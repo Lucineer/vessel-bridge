@@ -69,10 +69,12 @@ class TransportType(Enum):
     GPIO = "gpio"
     PWM = "pwm"
     ADC = "adc"
+    SERVO = "servo"
+    RELAY = "relay"
     MQTT = "mqtt"
     HTTP = "http"
     WEBSOCKET = "websocket"
-    DDS = "dds"  # ROS 2 Data Distribution Service
+    DDS = "dds"
 
 
 class QoSLevel(Enum):
@@ -121,7 +123,8 @@ class SensorReading:
         """Compact binary for UART transport (ESP32 compatible)."""
         # Format: type(1) + qos(1) + ts(8) + num_values(1) + [key_len(1) + key + value(4)]...
         buf = bytearray()
-        buf.append(self.sensor_type.value)
+        type_idx = {e.value: i for i, e in enumerate(SensorType)}
+        buf.append(type_idx.get(self.sensor_type.value, 0))
         buf.append(self.qos.value)
         buf.extend(struct.pack(">d", self.timestamp))
         vals = list(self.values.items())
@@ -421,7 +424,7 @@ MARINE_SENSORS = [
 MARINE_ACTUATORS = [
     ActuatorConfig("thruster_port", ActuatorType.THRUSTER, TransportType.PWM, "GPIO12", -1.0, 1.0, VesselDomain.MARINE),
     ActuatorConfig("thruster_stbd", ActuatorType.THRUSTER, TransportType.PWM, "GPIO13", -1.0, 1.0, VesselDomain.MARINE),
-    ActuatorConfig("rudder", ActuatorType.RUDDER, TransportType.SERVO, "GPIO14", -45.0, 45.0, VesselDomain.MARINE),
+    ActuatorConfig("rudder", ActuatorType.RUDDER, TransportType.PWM, "GPIO14", -45.0, 45.0, VesselDomain.MARINE),
     ActuatorConfig("light_nav", ActuatorType.LIGHT, TransportType.RELAY, "GPIO15", 0.0, 1.0, VesselDomain.MARINE),
     ActuatorConfig("winch", ActuatorType.WINCH, ActuatorType.RELAY, "GPIO16", 0.0, 1.0, VesselDomain.MARINE),
 ]
